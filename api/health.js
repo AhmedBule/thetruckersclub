@@ -15,6 +15,7 @@ module.exports = (req, res) => {
       secretKey: stripe.length > 0,
       testMode: stripe.startsWith("sk_test_") || stripe.startsWith("rk_test_"),
     },
+    adminPassword: has("ADMIN_PASSWORD"),
     deployedAt: process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : null,
   });
 };
