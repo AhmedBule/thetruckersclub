@@ -42,6 +42,8 @@ module.exports = async (req, res) => {
     const missing = ["company", "city", "title", "pay", "phone", "email"].filter((k) => !job[k]);
     if (missing.length) return send(res, 400, { error: "Please fill in: " + missing.join(", ") + "." });
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(job.email)) return send(res, 400, { error: "Please enter a valid email address." });
+    const phoneDigits = job.phone.replace(/\D/g, "");
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) return send(res, 400, { error: "Please enter a full phone number with area code, like (612) 555 0123." });
 
     // First single post is free for a company that has never posted before.
     if (job.tier === "basic") {

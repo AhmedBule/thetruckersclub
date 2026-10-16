@@ -368,7 +368,7 @@ North Star Freight · Minneapolis
           </div>
           <label>Details<textarea id="p-desc" maxlength="1200" placeholder="Home every weekend. 2,400 to 2,800 miles a week. 2023 Freightliner Cascadias, no touch freight. 1 year CDL A experience."></textarea></label>
           <div class="row">
-            <label>Phone or WhatsApp<input id="p-phone" required maxlength="30" type="tel" placeholder="(614) 555 0147"></label>
+            <label>Phone or WhatsApp<input id="p-phone" required maxlength="30" type="tel" inputmode="tel" pattern="[\d\s()+.\-]*\d[\d\s()+.\-]*" minlength="10" title="Full phone number with area code, like (612) 555 0123" placeholder="(614) 555 0147"></label>
             <label>Email for receipt<input id="p-email" required maxlength="120" type="email" placeholder="hiring@company.com"></label>
           </div>
           <input id="p-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
