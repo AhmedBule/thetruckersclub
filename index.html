@@ -203,6 +203,9 @@ footer .tagline{font-size:20px;margin-top:10px}
 .pill{font:700 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:4px 8px;border-radius:999px}
 .pill.pending{background:var(--sign);color:var(--sign-ink)}
 .pill.live{background:var(--wa);color:var(--wa-ink)}
+.pill.review{background:var(--sign);color:var(--sign-ink)}.pill.unpaid,.pill.rejected{background:var(--chip);color:var(--muted)}
+#admin-stats b{color:var(--ink)}#admin-stats span{color:var(--muted)}
+.qmeta{font-size:13px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
 .calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
 .slider{display:grid;gap:4px;margin-bottom:14px}
 .slider div{display:flex;justify-content:space-between;font-size:14px}
@@ -311,7 +314,7 @@ North Star Freight · Minneapolis
 <section class="waband">
   <div class="wrap">
     <div><h2 data-i="waH">Never miss a job again</h2><p data-i="waP">Join drivers getting new jobs, safety alerts and road news on WhatsApp every day.</p></div>
-    <a class="btn" id="join-link" href="https://chat.whatsapp.com/D2udPtghsMCA3Q98YUKy5P" target="_blank" rel="noopener" data-i="waBtn">Join on WhatsApp</a><button type="button" id="join-btn" hidden></button>
+    <a class="btn" id="join-link" href="https://chat.whatsapp.com/D2udPtghsMCA3Q98YUKy5P" target="_blank" rel="noopener" data-i="waBtn">Join on WhatsApp</a>
   </div>
 </section>
 
@@ -351,20 +354,24 @@ North Star Freight · Minneapolis
       <div class="panel">
         <form id="post-form">
           <div class="row">
-            <label>Company<input id="p-co" required value="Lakeshore Freight LLC"></label>
-            <label>Hiring city<input id="p-city" required value="Columbus, OH"></label>
+            <label>Company<input id="p-co" required maxlength="100" placeholder="Lakeshore Freight LLC"></label>
+            <label>Hiring city<input id="p-city" required maxlength="80" placeholder="Columbus, OH"></label>
           </div>
-          <label>Job title<input id="p-title" required value="CDL A Regional Dry Van Driver"></label>
+          <label>Job title<input id="p-title" required maxlength="120" placeholder="CDL A Regional Dry Van Driver"></label>
           <div class="row">
             <label>Route type<select id="p-type"><option>Regional</option><option>OTR</option><option>Local</option><option>Dedicated</option></select></label>
             <label>Role<select id="p-role"><option>Company driver</option><option>Owner operator</option><option>Lease purchase</option><option>Team</option></select></label>
           </div>
           <div class="row">
-            <label>Pay<input id="p-pay" required value="$0.68"></label>
+            <label>Pay<input id="p-pay" required maxlength="30" placeholder="$0.68"></label>
             <label>Pay unit<select id="p-unit"><option>per mile</option><option>per week</option><option>of gross</option><option>per hour</option></select></label>
           </div>
-          <label>Details<textarea id="p-desc">Home every weekend. 2,400 to 2,800 miles a week. 2023 Freightliner Cascadias, no touch freight. 1 year CDL A experience.</textarea></label>
-          <label>Phone or WhatsApp<input id="p-phone" required value="(614) 555 0147"></label>
+          <label>Details<textarea id="p-desc" maxlength="1200" placeholder="Home every weekend. 2,400 to 2,800 miles a week. 2023 Freightliner Cascadias, no touch freight. 1 year CDL A experience."></textarea></label>
+          <div class="row">
+            <label>Phone or WhatsApp<input id="p-phone" required maxlength="30" type="tel" placeholder="(614) 555 0147"></label>
+            <label>Email for receipt<input id="p-email" required maxlength="120" type="email" placeholder="hiring@company.com"></label>
+          </div>
+          <input id="p-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
           <div style="display:grid;gap:6px"><span class="eyebrow" style="color:var(--muted)">Listing type</span>
             <div class="tiers">
               <label class="tier"><input type="radio" name="tier" value="basic" id="t-basic" checked><span><b>$49</b>Single<i>First one free</i></span></label>
@@ -372,7 +379,8 @@ North Star Freight · Minneapolis
               <label class="tier"><input type="radio" name="tier" value="monthly" id="t-month"><span><b>$199</b>Unlimited<i>Per month</i></span></label>
             </div>
           </div>
-          <button class="btn btn-sky" type="submit">Submit job for review</button>
+          <button class="btn btn-sky" type="submit" id="post-btn">Continue to checkout</button>
+          <p class="note" id="post-note" style="margin:0">Your first single post is free. Paid posts go to secure checkout by Stripe. Every job is reviewed before it goes live.</p>
         </form>
       </div>
       <div class="preview">
@@ -424,8 +432,16 @@ North Star Freight · Minneapolis
 <section class="block" id="admin" hidden>
   <div class="wrap">
     <div class="shead"><div><div class="eyebrow">Owner only</div><h2>Admin</h2></div><button class="btn btn-ghost btn-sm" type="button" id="close-admin">Back to site</button></div>
-    <h3 style="font-size:28px;margin-bottom:12px">Review queue</h3>
-    <div class="queue" id="queue"></div>
+    <div class="panel" id="admin-login" style="max-width:460px">
+      <h3 style="font-size:22px">Sign in</h3>
+      <p class="note">Enter your admin password to review jobs.</p>
+      <form id="admin-form" style="margin-top:12px"><label>Password<input id="admin-pass" type="password" autocomplete="current-password" required></label><button class="btn btn-sky" type="submit">Sign in</button><p class="note" id="admin-err" style="margin:0"></p></form>
+    </div>
+    <div id="admin-area" hidden>
+      <div class="hstats" id="admin-stats" style="border-top:0;margin:0 0 20px;padding:0"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><h3 style="font-size:24px">Submissions</h3><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" type="button" id="admin-refresh">Refresh</button><button class="btn btn-ghost btn-sm" type="button" id="admin-out">Sign out</button></div></div>
+      <div class="queue" id="queue"></div>
+    </div>
     <h3 style="font-size:28px;margin:40px 0 12px">Revenue estimate</h3>
     <div class="calc">
       <div class="panel" id="calc">
@@ -435,11 +451,6 @@ North Star Freight · Minneapolis
         <div class="slider"><div><span>Sponsors</span><output id="o-ads"></output></div><input type="range" id="r-ads" min="0" max="80" value="3"></div>
       </div>
       <div class="total"><span class="eyebrow" style="color:var(--night-muted)">Monthly revenue</span><b id="rev-total">$0</b><table id="rev-table"></table></div>
-    </div>
-    <div class="panel" style="margin-top:28px">
-      <h3 style="font-size:24px">WhatsApp invite link</h3>
-      <p class="note">The Join on WhatsApp button uses this link.</p>
-      <div class="filters" style="margin:12px 0 0"><input id="wa-link" placeholder="https://chat.whatsapp.com/your-invite" aria-label="WhatsApp invite link"><button class="btn btn-sky" type="button" id="save-link">Save link</button></div>
     </div>
   </div>
 </section>
@@ -465,40 +476,80 @@ const T={
 const CITIES=["Minneapolis","Columbus","Seattle","Nashville","Atlanta","Phoenix","San Diego","Dallas","Denver","Salt Lake City"];
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const SAMPLE=[
- {id:1,co:"North Star Freight",city:"Minneapolis, MN",title:"CDL A OTR Reefer Driver",type:"OTR",role:"Company driver",pay:"$0.72",unit:"per mile",desc:"Out 2 to 3 weeks. $3,000 sign on bonus. Prayer friendly dispatch with a Somali speaking dispatcher.",phone:"(612) 555 0110",tier:"featured",status:"live",ex:true},
- {id:4,co:"Riverbend Transport",city:"Nashville, TN",title:"Team Drivers, Dedicated Lane",type:"Dedicated",role:"Team",pay:"$4,800",unit:"per week",desc:"Nashville to Phoenix dedicated. Split pay. 2024 Volvo with APU and inverter.",phone:"(615) 555 0161",tier:"featured",status:"live",ex:true},
- {id:2,co:"Cedar Lane Logistics",city:"Columbus, OH",title:"Owner Operator, Dry Van",type:"Regional",role:"Owner operator",pay:"88%",unit:"of gross",desc:"Midwest lanes, weekly settlements, fuel card discounts, no forced dispatch.",phone:"(614) 555 0182",tier:"basic",status:"live",ex:true},
- {id:3,co:"Rainier Haul Co.",city:"Kent, WA",title:"Local Container Driver",type:"Local",role:"Company driver",pay:"$34",unit:"per hour",desc:"Home daily. Port of Seattle and Tacoma runs. TWIC card required.",phone:"(253) 555 0134",tier:"basic",status:"live",ex:true},
- {id:5,co:"Desert Line Carriers",city:"Phoenix, AZ",title:"Lease Purchase, Flatbed",type:"OTR",role:"Lease purchase",pay:"$1.85",unit:"per mile",desc:"Walk away lease, no credit check. Tarp pay included.",phone:"(602) 555 0177",tier:"basic",status:"pending",ex:true}
+ {id:"e1",co:"North Star Freight",city:"Minneapolis, MN",title:"CDL A OTR Reefer Driver",type:"OTR",role:"Company driver",pay:"$0.72",unit:"per mile",desc:"Out 2 to 3 weeks. $3,000 sign on bonus. Prayer friendly dispatch with a Somali speaking dispatcher.",phone:"(612) 555 0110",tier:"featured",ex:true},
+ {id:"e2",co:"Riverbend Transport",city:"Nashville, TN",title:"Team Drivers, Dedicated Lane",type:"Dedicated",role:"Team",pay:"$4,800",unit:"per week",desc:"Nashville to Phoenix dedicated. Split pay. 2024 Volvo with APU and inverter.",phone:"(615) 555 0161",tier:"featured",ex:true},
+ {id:"e3",co:"Cedar Lane Logistics",city:"Columbus, OH",title:"Owner Operator, Dry Van",type:"Regional",role:"Owner operator",pay:"88%",unit:"of gross",desc:"Midwest lanes, weekly settlements, fuel card discounts, no forced dispatch.",phone:"(614) 555 0182",tier:"basic",ex:true}
 ];
-let jobs=store.get("sd_jobs",null)||SAMPLE, lang=store.get("sd_lang","en");
-const save=()=>store.set("sd_jobs",jobs);
+let jobs=[], liveCount=0, lang=store.get("sd_lang","en"), adminJobs=[];
 const $=s=>document.querySelector(s);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const PRICE={basic:49,featured:99,monthly:199};
+const fromDb=r=>({id:r.id,co:r.company,city:r.city,title:r.title,type:r.route_type,role:r.role,pay:r.pay,unit:r.pay_unit,desc:r.description||"",phone:r.phone,tier:r.tier,status:r.status,email:r.email,free:r.free_post,amount:r.amount_cents,created:r.created_at});
 
-function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2400)}
+function toast(m,ms){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,ms||3200)}
 async function copy(text){try{await navigator.clipboard.writeText(text);toast("Copied. Paste it into WhatsApp.")}catch(e){const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("Copied")}catch(_){toast("Select the text and copy it manually")}ta.remove()}}
 const waText=j=>`🚛 *${j.title}*\n🏢 ${j.co}\n📍 ${j.city}\n💵 *${j.pay} ${j.unit}*\n🛣️ ${j.type} · ${j.role}\n\n${j.desc}\n\n📞 ${j.phone}\n🇸🇴 Shaqo cusub: ${j.city}. Wac ${j.phone}.\n\n_thetruckerclub.com_`;
 const waHtml=t=>esc(t).replace(/\*(.+?)\*/g,"<b>$1</b>").replace(/_(.+?)_/g,"<i>$1</i>");
 
+async function loadJobs(){
+ try{const r=await fetch("/api/jobs");if(!r.ok)throw 0;const d=await r.json();const live=(d.jobs||[]).map(fromDb);liveCount=live.length;jobs=live.length?live:SAMPLE}
+ catch(e){liveCount=0;jobs=SAMPLE}
+ renderJobs();
+}
 function renderJobs(){
- const q=$("#f-q").value.toLowerCase(),ty=$("#f-type").value,ro=$("#f-role").value,live=jobs.filter(j=>j.status==="live");
- $("#stat-jobs").textContent=live.length;
- const list=live.filter(j=>(!ty||j.type===ty)&&(!ro||j.role===ro)&&(!q||[j.title,j.co,j.city,j.desc].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tier==="featured")-(a.tier==="featured"));
+ const q=$("#f-q").value.toLowerCase(),ty=$("#f-type").value,ro=$("#f-role").value;
+ $("#stat-jobs").textContent=liveCount;
+ const list=jobs.filter(j=>(!ty||j.type===ty)&&(!ro||j.role===ro)&&(!q||[j.title,j.co,j.city,j.desc].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tier==="featured")-(a.tier==="featured"));
  $("#joblist").innerHTML=list.length?list.map(j=>`<article class="job ${j.tier==="featured"?"featured":""}">
   <div class="jtop"><div><h3>${esc(j.title)}</h3><div class="co">${esc(j.co)} · ${esc(j.city)}</div></div><div class="pay"><b>${esc(j.pay)}</b><small>${esc(j.unit)}</small></div></div>
   <div class="chips">${j.tier==="featured"?'<span class="chip feat">★ Featured</span>':""}<span class="chip">${esc(j.type)}</span><span class="chip">${esc(j.role)}</span>${j.ex?'<span class="chip ex">Example</span>':""}</div>
   <p>${esc(j.desc)}</p>
-  <div class="jact"><span class="phonenum">${T[lang].call}: ${esc(j.phone)}</span><button class="btn btn-wa btn-sm" type="button" data-share="${j.id}">${T[lang].share}</button></div></article>`).join(""):`<div class="empty">No jobs match those filters. Clear a filter to see more.</div>`;
+  <div class="jact"><span class="phonenum">${T[lang].call}: ${esc(j.phone)}</span><button class="btn btn-wa btn-sm" type="button" data-share="${esc(j.id)}">${T[lang].share}</button></div></article>`).join(""):`<div class="empty">No jobs match those filters. Clear a filter to see more.</div>`;
 }
-const formJob=()=>({co:$("#p-co").value,city:$("#p-city").value,title:$("#p-title").value,type:$("#p-type").value,role:$("#p-role").value,pay:$("#p-pay").value,unit:$("#p-unit").value,desc:$("#p-desc").value,phone:$("#p-phone").value,tier:document.querySelector('input[name="tier"]:checked').value});
-const renderPreview=()=>$("#wa-preview").innerHTML=waHtml(waText(formJob()));
+const tierNow=()=>document.querySelector('input[name="tier"]:checked').value;
+const formJob=()=>({co:$("#p-co").value||$("#p-co").placeholder,city:$("#p-city").value||$("#p-city").placeholder,title:$("#p-title").value||$("#p-title").placeholder,type:$("#p-type").value,role:$("#p-role").value,pay:$("#p-pay").value||$("#p-pay").placeholder,unit:$("#p-unit").value,desc:$("#p-desc").value||$("#p-desc").placeholder,phone:$("#p-phone").value||$("#p-phone").placeholder,tier:tierNow()});
+const renderPreview=()=>{$("#wa-preview").innerHTML=waHtml(waText(formJob()));$("#post-btn").textContent=tierNow()==="basic"?"Submit job":"Continue to checkout"};
+
+async function submitJob(e){
+ e.preventDefault();const btn=$("#post-btn");btn.disabled=true;const old=btn.textContent;btn.textContent="Sending…";
+ const body={company:$("#p-co").value,city:$("#p-city").value,title:$("#p-title").value,route_type:$("#p-type").value,role:$("#p-role").value,pay:$("#p-pay").value,pay_unit:$("#p-unit").value,description:$("#p-desc").value,phone:$("#p-phone").value,email:$("#p-email").value,tier:tierNow(),website:$("#p-website").value};
+ try{const r=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const d=await r.json();
+  if(!r.ok)throw new Error(d.error||"Could not submit your job.");
+  if(d.url){location.href=d.url;return}
+  $("#post-form").reset();renderPreview();toast("Your free post is in! We'll review it and publish it soon.",6000);
+ }catch(err){toast(err.message||"Could not submit. Check your connection and try again.",6000)}
+ btn.disabled=false;btn.textContent=old;
+}
+async function checkReturn(){
+ const u=new URL(location.href);const sid=u.searchParams.get("paid");
+ if(u.searchParams.get("canceled")){toast("Checkout canceled. Your job was not posted.",5000)}
+ if(sid){try{const r=await fetch("/api/confirm?session_id="+encodeURIComponent(sid));const d=await r.json();toast(d.paid?"Payment received. Thank you! Your job is in review and goes live soon.":"We couldn't confirm your payment yet. Email jobs@thetruckerclub.com if you were charged.",8000)}catch(e){}}
+ if(sid||u.searchParams.get("canceled")){u.search="";history.replaceState(null,"",u.toString())}
+}
+
+// Admin
+const adminKey=()=>{try{return sessionStorage.getItem("tc_admin")||""}catch(e){return ""}};
+const setKey=k=>{try{k?sessionStorage.setItem("tc_admin",k):sessionStorage.removeItem("tc_admin")}catch(e){}};
+async function adminFetch(method,body){const r=await fetch("/api/admin",{method,headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:body?JSON.stringify(body):undefined});const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||"Error");e.code=r.status;throw e}return d}
+const STATUS={review:"Needs review",live:"Live",unpaid:"Not paid",rejected:"Rejected"};
+async function loadAdmin(){
+ if(!adminKey()){$("#admin-login").hidden=false;$("#admin-area").hidden=true;return}
+ try{const d=await adminFetch("GET");adminJobs=d.jobs.map(fromDb);$("#admin-login").hidden=true;$("#admin-area").hidden=false;
+  $("#admin-stats").innerHTML=`<div><b>${d.stats.review}</b><span>Need review</span></div><div><b>${d.stats.live}</b><span>Live jobs</span></div><div><b>$${(d.stats.revenue_cents/100).toLocaleString()}</b><span>Paid (test mode)</span></div>`;
+  renderQueue();
+ }catch(e){if(e.code===401){setKey("");$("#admin-err").textContent="Wrong password."}else{$("#admin-err").textContent=e.message}$("#admin-login").hidden=false;$("#admin-area").hidden=true}
+}
 function renderQueue(){
- $("#queue").innerHTML=jobs.slice().reverse().map(j=>`<div class="qitem"><div><strong>${esc(j.title)}</strong><div class="note" style="margin:0">${esc(j.co)} · ${j.tier} · $${PRICE[j.tier]}${j.ex?" · example":""}</div></div>
- <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${j.status}">${j.status==="live"?"Live":"Awaiting payment"}</span>
- ${j.status==="pending"?`<button class="btn btn-sign btn-sm" type="button" data-approve="${j.id}">Mark paid &amp; publish</button>`:""}
- <button class="btn btn-ghost btn-sm" type="button" data-share="${j.id}">Copy post</button><button class="btn btn-ghost btn-sm" type="button" data-remove="${j.id}">Remove</button></div></div>`).join("")||`<div class="empty">No submissions yet.</div>`;
+ const order={review:0,live:1,unpaid:2,rejected:3};
+ const list=adminJobs.slice().sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+ $("#queue").innerHTML=list.map(j=>`<div class="qitem"><div><strong>${esc(j.title)}</strong>
+  <div class="qmeta">${esc(j.co)} · ${esc(j.city)} · ${esc(j.pay)} ${esc(j.unit)}</div>
+  <div class="qmeta">${esc(j.tier)} · ${j.free?"free first post":"$"+(j.amount/100)} · ${esc(j.email)} · ${esc(j.phone)}</div></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${j.status}">${STATUS[j.status]||j.status}</span>
+  ${j.status==="review"?`<button class="btn btn-sign btn-sm" type="button" data-act="approve" data-id="${j.id}">Approve &amp; publish</button><button class="btn btn-ghost btn-sm" type="button" data-act="reject" data-id="${j.id}">Reject</button>`:""}
+  ${j.status==="live"?`<button class="btn btn-ghost btn-sm" type="button" data-act="unpublish" data-id="${j.id}">Unpublish</button>`:""}
+  <button class="btn btn-ghost btn-sm" type="button" data-share="${j.id}">Copy WhatsApp post</button>
+  <button class="btn btn-ghost btn-sm" type="button" data-act="delete" data-id="${j.id}">Delete</button></div></div>`).join("")||`<div class="empty">No submissions yet. Jobs posted on the site will show up here.</div>`;
 }
 function renderCalc(){
  const v=k=>+$("#r-"+k).value,f=n=>"$"+n.toLocaleString();
@@ -510,27 +561,31 @@ function renderCalc(){
 }
 function applyLang(){document.querySelectorAll("[data-i]").forEach(el=>{const v=T[lang][el.dataset.i];if(v)el.innerHTML=v});
  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===lang));document.documentElement.lang=lang;renderJobs()}
-function showAdmin(on){$("#site").hidden=on;$("#admin").hidden=!on;if(on){renderQueue();renderCalc()}window.scrollTo(0,0)}
+function showAdmin(on){$("#site").hidden=on;$("#admin").hidden=!on;if(on){loadAdmin();renderCalc()}window.scrollTo(0,0)}
 
 $("#track").innerHTML=[...CITIES,...CITIES].map(c=>`<span>${c}</span>`).join("");
 document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{lang=b.dataset.lang;store.set("sd_lang",lang);applyLang()});
 ["#f-q","#f-type","#f-role"].forEach(s=>$(s).addEventListener("input",renderJobs));
 $("#post-form").addEventListener("input",renderPreview);
-$("#post-form").addEventListener("submit",e=>{e.preventDefault();const j=formJob();j.id=Date.now();j.status="pending";jobs.push(j);save();toast("Submitted. Your job goes live after review and payment.")});
+$("#post-form").addEventListener("change",renderPreview);
+$("#post-form").addEventListener("submit",submitJob);
 $("#copy-wa").onclick=()=>copy(waText(formJob()));
-document.addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;const id=+(t.dataset.share||t.dataset.approve||t.dataset.remove||0);if(!id)return;const j=jobs.find(x=>x.id===id);if(!j)return;
- if(t.dataset.share)copy(waText(j));
- if(t.dataset.approve){j.status="live";save();renderQueue();renderJobs();toast("Published. Copy the post into WhatsApp.")}
- if(t.dataset.remove){jobs=jobs.filter(x=>x.id!==id);save();renderQueue();renderJobs();toast("Removed")}});
+$("#admin-form").addEventListener("submit",e=>{e.preventDefault();setKey($("#admin-pass").value);$("#admin-err").textContent="";$("#admin-pass").value="";loadAdmin()});
+$("#admin-refresh").onclick=loadAdmin;
+$("#admin-out").onclick=()=>{setKey("");loadAdmin()};
+document.addEventListener("click",async e=>{
+ const s=e.target.closest("[data-share]");if(s){const id=s.dataset.share;const j=[...jobs,...adminJobs].find(x=>String(x.id)===id);if(j)copy(waText(j));return}
+ const a=e.target.closest("[data-act]");if(!a)return;
+ if(a.dataset.act==="delete"&&a.dataset.confirm!=="1"){a.dataset.confirm="1";a.textContent="Tap again to delete";setTimeout(()=>{a.dataset.confirm="";a.textContent="Delete"},4000);return}
+ a.disabled=true;try{await adminFetch("POST",{id:a.dataset.id,action:a.dataset.act});toast(a.dataset.act==="approve"?"Published. Copy the WhatsApp post and share it in the group.":"Updated");await loadAdmin();loadJobs()}catch(err){toast(err.message);a.disabled=false}
+});
 document.querySelectorAll("#calc input").forEach(i=>i.oninput=renderCalc);
 $("#open-admin").onclick=()=>showAdmin(true);$("#close-admin").onclick=()=>showAdmin(false);
 document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener("click",()=>{if(!$("#admin").hidden)showAdmin(false)}));
 const WA_LINK="https://chat.whatsapp.com/D2udPtghsMCA3Q98YUKy5P";
-$("#wa-link").value=store.get("sd_link","")||WA_LINK;
-$("#save-link").onclick=()=>{store.set("sd_link",$("#wa-link").value.trim());toast("Link saved")};
-document.addEventListener("click",e=>{const b=e.target.closest("[data-notify],[data-join]");if(!b)return;if(b.dataset.join){$("#join-btn").click();return}toast(b.dataset.notify+" is coming soon. Follow us to hear first.")});
-$("#join-btn").onclick=()=>{const l=store.get("sd_link","")||WA_LINK;if(l){const a=document.createElement("a");a.href=l;a.target="_blank";a.rel="noopener";a.click()}else toast("Invite link coming soon. Add it in Admin.")};
-applyLang();renderPreview();
+document.addEventListener("click",e=>{const b=e.target.closest("[data-notify]");if(!b)return;toast(b.dataset.notify+" is coming soon. Follow us to hear first.")});
+if(location.hash==="#admin")showAdmin(true);
+applyLang();renderPreview();loadJobs();checkReturn();
 </script>
 
 </body>

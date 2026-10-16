@@ -1,0 +1,10 @@
+{
+  "name": "thetruckerclub",
+  "private": true,
+  "description": "The Trucker Club website: CDL jobs and driver communities",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "postgres": "3.4.5",
+    "stripe": "17.7.0"
+  }
+}
