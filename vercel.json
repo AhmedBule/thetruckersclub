@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/join", "destination": "https://chat.whatsapp.com/D2udPtghsMCA3Q98YUKy5P", "permanent": false },
+    { "source": "/whatsapp", "destination": "https://chat.whatsapp.com/D2udPtghsMCA3Q98YUKy5P", "permanent": false }
+  ]
+}
