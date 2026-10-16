@@ -484,7 +484,8 @@ let jobs=[], liveCount=0, lang=store.get("sd_lang","en"), adminJobs=[];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const PRICE={basic:49,featured:99,monthly:199};
-const fromDb=r=>({id:r.id,co:r.company,city:r.city,title:r.title,type:r.route_type,role:r.role,pay:r.pay,unit:r.pay_unit,desc:r.description||"",phone:r.phone,tier:r.tier,status:r.status,email:r.email,free:r.free_post,amount:r.amount_cents,created:r.created_at});
+const fmtPay=p=>{p=String(p||"").trim();return /^\d/.test(p)&&!p.includes("%")?"$"+p:p};
+const fromDb=r=>({id:r.id,co:r.company,city:r.city,title:r.title,type:r.route_type,role:r.role,pay:fmtPay(r.pay),unit:r.pay_unit,desc:r.description||"",phone:r.phone,tier:r.tier,status:r.status,email:r.email,free:r.free_post,amount:r.amount_cents,created:r.created_at});
 
 function toast(m,ms){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,ms||3200)}
 async function copy(text){try{await navigator.clipboard.writeText(text);toast("Copied. Paste it into WhatsApp.")}catch(e){const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("Copied")}catch(_){toast("Select the text and copy it manually")}ta.remove()}}
