@@ -1,5 +1,5 @@
-# The Truckers Club
+# The Trucker Club
 
-Website for thetruckersclub.com: CDL jobs and WhatsApp driver communities.
+Website for thetruckerclub.com: CDL jobs and WhatsApp driver communities.
 
 Static site. `index.html` is the whole page. Deployed on Vercel.
